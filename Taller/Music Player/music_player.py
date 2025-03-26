@@ -77,6 +77,7 @@ playlist = TrackList(songs)
 
 # Función para reproducir una canción
 def play_track(track):
+    pygame.mixer.music.stop()  # Detiene la canción en curso
     pygame.mixer.music.load(os.path.join(MUSIC_FOLDER, track["file"]))
     pygame.mixer.music.play()
 
@@ -122,20 +123,18 @@ def unpause():
 @app.route('/next', methods=['GET'])
 def next_track():
     track = playlist.next_track()
-    try:
+    if track:
         play_track(track)
         return jsonify({'status': 'playing', 'track': track["title"], 'cover': track["cover"]})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
+    return jsonify({'status': 'error', 'message': 'No next track found'})
 
 @app.route('/prev', methods=['GET'])
 def prev_track():
     track = playlist.prev_track()
-    try:
+    if track:
         play_track(track)
         return jsonify({'status': 'playing', 'track': track["title"], 'cover': track["cover"]})
-    except Exception as e:
-        return jsonify({'status': 'error', 'message': str(e)})
+    return jsonify({'status': 'error', 'message': 'No previous track found'})
 
 # Obtener el progreso de la canción en reproducción
 @app.route('/get_progress', methods=['GET'])

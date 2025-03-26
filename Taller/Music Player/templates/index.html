@@ -61,7 +61,6 @@
                             <!-- Controles de reproducción -->
                             <div class="controls">
                                 <button onclick="controlMusic('prev')" aria-label="Previous song"><i class="fas fa-step-backward"></i></button>
-                                <button onclick="controlMusic('play')" aria-label="Play"><i class="fas fa-play"></i></button>
                                 <button onclick="controlMusic('pause')" aria-label="Pause"><i class="fas fa-pause"></i></button>
                                 <button onclick="controlMusic('unpause')" aria-label="Unpause"><i class="fas fa-play-circle"></i></button>
                                 <button onclick="controlMusic('next')" aria-label="Next song"><i class="fas fa-step-forward"></i></button>
@@ -77,44 +76,71 @@
         let currentTrack = null;
         let currentAudio = new Audio();
 
-        async function controlMusic(action) {
-            try {
-                const response = await fetch(`/${action}`);
-                const data = await response.json();
-                if (data.track && data.cover) {
-                    document.getElementById("currentTrack").innerText = "Current Track: " + data.track;
-                    document.getElementById("albumArt").src = `/static/covers/${data.cover}`;
-                }
-            } catch (error) {
-                console.error("Error while controlling music:", error);
+        // Función para actualizar la interfaz con la nueva canción
+        function updateUI(data) {
+        if (data.status === "playing") {
+            document.getElementById("currentTrack").innerText = "Current Track: " + data.track;
+            document.getElementById("albumArt").src = "static/covers/" + data.cover;
             }
         }
 
-        function playSelected(element) {
-            const file = element.getAttribute("data-file");
-            const title = element.getAttribute("data-title");
-            const cover = element.getAttribute("data-cover");
+        function controlMusic(action) {
+        fetch(`/${action}`)
+            .then(response => response.json())
+            .then(data => {
+               if (data.status === "playing") {
+                 if (action === "unpause") {
+                    // Si es despausa, solo reanudar el audio sin cambiar el src
+                       currentAudio.play();
+                   } else {
+                    // Si es reproducción normal, cambiar la canción
+                       currentAudio.src = `/static/music/${data.trackFile}`;
+                      currentAudio.play();
+                      currentAudio.ontimeupdate = updateProgressBar;
+                  }
+                } else if (data.status === "paused") {
+                 currentAudio.pause();
+             }
 
-            document.getElementById("currentTrack").innerText = "Current Track: " + title;
-            document.getElementById("albumArt").src = cover;
-
-            fetch(`/play_selected?track=${file}&title=${title}&cover=${cover}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'playing') {
-                        console.log("Now playing: " + data.track);
-                        playTrack(file);
-                    }
-                })
-                .catch(error => {
-                    console.error("Error playing the track:", error);
-                });
+            // Actualizar UI solo cuando cambia la canción
+                if (action !== "pause" && action !== "unpause") {
+                 updateUI(data);
+                }
+            });
         }
 
+        function playSelected(element) {
+        const file = element.getAttribute("data-file");
+        const title = element.getAttribute("data-title");
+        const cover = element.getAttribute("data-cover");
+
+        // Detener la canción actual antes de iniciar la nueva
+        if (!currentAudio.paused || !currentAudio.ended) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        }
+
+         // Configurar la nueva canción correctamente
+     currentAudio.src = `/static/music/${file}`;
+     currentAudio.play();
+     currentAudio.ontimeupdate = updateProgressBar;
+
+        // Actualizar la interfaz
+        document.getElementById("currentTrack").innerText = "Current Track: " + title;
+        document.getElementById("albumArt").src = cover;
+        }
+
+
         function playTrack(file) {
-            currentAudio.src = `/static/music/${file}`;
-            currentAudio.play();
-            currentAudio.ontimeupdate = updateProgressBar;
+
+         if (!currentAudio.paused) {
+         currentAudio.pause();
+            currentAudio.currentTime = 0; // Reiniciar el tiempo de la canción anterior
+         }
+         // Configurar el nuevo archivo de audio
+         currentAudio.src = `/static/music/${file}`;
+        currentAudio.play();
+        currentAudio.ontimeupdate = updateProgressBar;
         }
 
         function updateProgressBar() {
@@ -197,8 +223,17 @@
             })
             .catch(error => console.error("Error removing song:", error));
     }
+    
+    // Escuchar cambios en los inputs de archivos y actualizar los campos de texto visibles
+    document.getElementById("songFile").addEventListener("change", function() {
+        document.getElementById("fakeSongFile").value = this.files[0].name;
+    });
 
-        setInterval(updateProgressBar, 1000);
-    </script>
+    document.getElementById("songCover").addEventListener("change", function() {
+        document.getElementById("fakeSongCover").value = this.files[0].name;
+    });
+
+    setInterval(updateProgressBar, 1000);
+</script>
 </body>
 </html>
