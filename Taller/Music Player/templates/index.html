@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1 class="main-title">Music Player</h1>
+    <div class="container">
+        <div class="content">
+            <!-- Lista de canciones -->
+            <div class="track-list">
+                <h3>Next Song</h3>
+                <ul id="trackList">
+                    {% for song in tracks %}
+                        <li 
+                            data-file="{{ song['file'] }}" 
+                            data-title="{{ song['title'] }}" 
+                            data-cover="{{ url_for('static', filename='covers/' + song['cover']) }}"
+                            onclick="playSelected(this)">
+                            {{ song['title'] }}
+                            <button onclick="removeSong(event, this)" class="delete-btn">❌</button>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <div class="song-controls">
+                    <input type="text" id="songTitle" placeholder="Song Title">
+                    <input type="text" id="fakeSongFile" placeholder="Filename (example.mp3)" onclick="document.getElementById('songFile').click();" readonly>
+                    <input type="file" id="songFile" accept="audio/*" style="display: none;">
+                    <input type="text" id="fakeSongCover" placeholder="Cover Image (cover.jpg)" onclick="document.getElementById('songCover').click();" readonly>
+                    <input type="file" id="songCover" accept="image/*" style="display: none;">
+                    
+                    <button onclick="addSong()">Add Song</button>
+
+                    <button class="add-first-btn" onclick="addSongFirst()">Add Song First</button>
+
+                    <input type="number" id="songPosition" placeholder="Position (1, 2, 3...)" min="1">
+                    <button onclick="addSongAtPosition()">Add Song at Position</button>
+
+
+                </div>
+            </div>
+
+            <!-- Sección de reproductor -->
+            <div class="right-section">
+                <div class="album-and-player">
+                    <!-- Imagen del álbum -->
+                    <img id="albumArt" class="album-art" src="{{ url_for('static', filename='covers/' + tracks[0]['cover']) }}" alt="Album Art: Prrum by Cosculluela">
+                    
+                    <!-- Contenedor del reproductor -->
+                    <div class="player-container">
+                        <p id="currentTrack">Current Track: None</p>
+                        <div class="player">
+                            <!-- Barra de progreso -->
+                            <div class="progress-bar">
+                                <div id="progress" class="progress"></div>
+                            </div>
+                            <!-- Controles de reproducción -->
+                            <div class="controls">
+                                <button onclick="controlMusic('prev')" aria-label="Previous song"><i class="fas fa-step-backward"></i></button>
+                                <button onclick="controlMusic('pause')" aria-label="Pause"><i class="fas fa-pause"></i></button>
+                                <button onclick="controlMusic('unpause')" aria-label="Unpause"><i class="fas fa-play-circle"></i></button>
+                                <button onclick="controlMusic('next')" aria-label="Next song"><i class="fas fa-step-forward"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Fin del contenedor de contenido -->
+    </div> <!-- Fin del contenedor principal -->
+
+    <script>
+        let currentTrack = null;
+        let currentAudio = new Audio();
+
+        // Función para actualizar la interfaz con la nueva canción
+        function updateUI(data) {
+        if (data.status === "playing") {
+            document.getElementById("currentTrack").innerText = "Current Track: " + data.track;
+            document.getElementById("albumArt").src = "static/covers/" + data.cover;
+            }
+        }
+
+        function controlMusic(action) {
+        fetch(`/${action}`)
+            .then(response => response.json())
+            .then(data => {
+               if (data.status === "playing") {
+                 if (action === "unpause") {
+                    // Si es despausa, solo reanudar el audio sin cambiar el src
+                       currentAudio.play();
+                   } else {
+                    // Si es reproducción normal, cambiar la canción
+                       currentAudio.src = `/static/music/${data.trackFile}`;
+                      currentAudio.play();
+                      currentAudio.ontimeupdate = updateProgressBar;
+                  }
+                } else if (data.status === "paused") {
+                 currentAudio.pause();
+             }
+
+            // Actualizar UI solo cuando cambia la canción
+                if (action !== "pause" && action !== "unpause") {
+                 updateUI(data);
+                }
+            });
+        }
+
+        function playSelected(element) {
+        const file = element.getAttribute("data-file");
+        const title = element.getAttribute("data-title");
+        const cover = element.getAttribute("data-cover");
+
+        // Detener la canción actual antes de iniciar la nueva
+        if (!currentAudio.paused || !currentAudio.ended) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        }
+
+         // Configurar la nueva canción correctamente
+     currentAudio.src = `/static/music/${file}`;
+     currentAudio.play();
+     currentAudio.ontimeupdate = updateProgressBar;
+
+        // Actualizar la interfaz
+        document.getElementById("currentTrack").innerText = "Current Track: " + title;
+        document.getElementById("albumArt").src = cover;
+        }
+
+
+        function playTrack(file) {
+
+         if (!currentAudio.paused) {
+         currentAudio.pause();
+            currentAudio.currentTime = 0; // Reiniciar el tiempo de la canción anterior
+         }
+         // Configurar el nuevo archivo de audio
+         currentAudio.src = `/static/music/${file}`;
+        currentAudio.play();
+        currentAudio.ontimeupdate = updateProgressBar;
+        }
+
+        function updateProgressBar() {
+            const progress = document.getElementById('progress');
+            const duration = currentAudio.duration;
+            const currentTime = currentAudio.currentTime;
+            const progressPercentage = (currentTime / duration) * 100;
+            progress.style.width = `${progressPercentage}%`;
+        }
+
+        function addSong() {
+            const title = document.getElementById("songTitle").value;
+            const file = document.getElementById("songFile").value;
+            const cover = document.getElementById("songCover").value;
+            
+            fetch('/add_song', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, file, cover })
+            }).then(() => location.reload());
+        }
+
+        function addSongFirst() {
+        const title = document.getElementById("songTitle").value;
+        const file = document.getElementById("songFile").value;
+        const cover = document.getElementById("songCover").value;
+        
+        fetch('/add_song_first', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, file, cover })
+        }).then(() => location.reload());
+    }
+
+    function addSongAtPosition() {
+    let title = document.getElementById("songTitle").value;
+    let file = document.getElementById("songFile").value;
+    let cover = document.getElementById("songCover").value;
+    let position = document.getElementById("songPosition").value;
+
+    // Convertir posición a número (o dejarla como null si está vacía)
+    position = position ? parseInt(position) : null;
+
+    fetch("/add_song_at_position", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ title, file, cover, position })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        location.reload(); // Recargar la página para actualizar la lista de canciones
+    })
+    .catch(error => console.error("Error:", error));
+}
+
+        function removeSong(event, button) {
+        event.stopPropagation(); // Evita que se active playSelected()
+
+        const file = button.parentElement.getAttribute("data-file"); // Obtener el archivo de la canción
+        const listItem = button.parentElement; // Referencia al <li>
+
+        fetch(`/remove_song?file=${file}`, { method: 'DELETE' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    listItem.remove(); // Eliminar la canción de la lista en el DOM
+
+                    // Si la canción eliminada era la que estaba sonando, actualizar la interfaz
+                    const currentTrackElement = document.getElementById("currentTrack");
+                    const albumArt = document.getElementById("albumArt");
+                    
+                    if (currentTrackElement.innerText.includes(listItem.getAttribute("data-title"))) {
+                        currentTrackElement.innerText = "Current Track: None";
+                        albumArt.src = "{{ url_for('static', filename='covers/' + tracks[0]['cover']) }}"; // Volver a la primera portada
+                    }
+                }
+            })
+            .catch(error => console.error("Error removing song:", error));
+    }
+    
+    // Escuchar cambios en los inputs de archivos y actualizar los campos de texto visibles
+    document.getElementById("songFile").addEventListener("change", function() {
+        document.getElementById("fakeSongFile").value = this.files[0].name;
+    });
+
+    document.getElementById("songCover").addEventListener("change", function() {
+        document.getElementById("fakeSongCover").value = this.files[0].name;
+    });
+
+    setInterval(updateProgressBar, 1000);
+</script>
+</body>
+</html>

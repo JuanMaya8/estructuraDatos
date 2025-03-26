@@ -1,0 +1,295 @@
+/* Fuente más moderna y consistente */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1e1e1e;
+    color: white;
+    margin-top: 50px;
+}
+
+/* Aplicar box-sizing global */
+* {
+    box-sizing: border-box;
+}
+
+/* Contenedor principal */
+.container {
+    display: flex;
+    justify-content: center;
+    width: 80%;
+    background: #333;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    margin: auto;
+    flex-wrap: wrap;
+}
+
+/* Contenedor de contenido */
+.content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    width: 100%;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+/* Lista de canciones */
+.track-list {
+    width: 35%;
+    max-height: 400px;
+    overflow-y: auto;
+    border-right: 2px solid #555;
+    padding: 15px;
+    flex-shrink: 0;
+    background: #2d2d2d;
+    border-radius: 8px;
+}
+
+.track-list h3 {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 20px;
+    color: #f1c40f;
+    text-transform: uppercase;
+}
+
+.track-list ul {
+    list-style: none;
+    padding: 0;
+}
+
+.track-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-bottom: 1px solid #666;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s ease;
+    text-align: center;
+    font-size: 16px;
+    position: relative;
+}
+
+.track-list li:hover {
+    background: #444;
+    transform: scale(1.05);
+}
+
+/* Imagen de carátula en la lista */
+.track-list li img {
+    width: 40px;
+    height: 40px;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+/* Botón de eliminación de canciones */
+.delete-btn {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    font-size: 18px;
+    cursor: pointer;
+    transition: color 0.3s, transform 0.2s;
+}
+
+.delete-btn:hover {
+    color: #ff6b6b;
+    transform: scale(1.2);
+}
+
+/* Controles de añadir canciones */
+.song-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.song-controls input {
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+}
+
+.song-controls button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #f1c40f;
+    color: black;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.song-controls button:hover {
+    background: #ffcc00;
+    transform: scale(1.05);
+}
+
+/* Contenedor de imagen y reproductor */
+.right-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 30px;
+    min-width: 320px;
+    flex-shrink: 0;
+    width: 60%;
+}
+
+/* Imagen del álbum */
+.album-art {
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* Contenedor del reproductor */
+.player-container {
+    width: 60%;
+}
+
+/* Controles de reproducción */
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.controls button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    transition: transform 0.2s ease, color 0.3s;
+}
+
+.controls button:hover {
+    transform: scale(1.2);
+    color: #f1c40f;
+}
+
+/* Barra de progreso */
+.progress-bar {
+    width: 80%;
+    height: 8px;
+    background: #555;
+    margin: 15px auto;
+    position: relative;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    width: 0;
+    background: #f1c40f;
+    transition: width 0.5s ease;
+}
+
+/* Contenedor de controles para agregar canción */
+.add-song-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    background: #2d2d2d;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Campos de entrada */
+.add-song-container input {
+    width: 100%;
+    max-width: 250px;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #555;
+    background: #1e1e1e;
+    color: white;
+    text-align: center;
+}
+
+/* Estilo para el nuevo botón */
+.add-song-container button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background: #27ae60; /* Verde llamativo */
+    color: white;
+    font-weight: bold;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.add-song-container button:hover {
+    background: #219150; /* Verde más oscuro */
+    transform: scale(1.05);
+}
+
+/* Estilos para el botón de añadir al inicio */
+.song-controls .add-first-btn {
+    background: #3498db; /* Azul para diferenciarlo */
+    color: white;
+}
+
+.song-controls .add-first-btn:hover {
+    background: #2980b9; /* Un tono más oscuro en hover */
+}
+
+
+/* Responsividad */
+@media (max-width: 900px) {
+    .content {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .track-list {
+        width: 100%;
+        border-right: none;
+        border-bottom: 2px solid #555;
+        margin-bottom: 20px;
+    }
+
+    .right-section {
+        width: 100%;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .album-art {
+        width: 60%;
+        max-width: 200px;
+    }
+
+    .player-container {
+        width: 80%;
+    }
+
+    .album-and-player {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+
+/* Estilos adicionales para mayor elegancia y visibilidad */
+h1 {
+    font-size: 36px;
+    color: #f1c40f;
+    margin-bottom: 30px;
+}
